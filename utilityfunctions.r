@@ -15,7 +15,7 @@ require('gplots')
 require('plotly')
 
 # read in .csv or .xlsx file
-read.default <- function(file, sheet = 1){
+read.default <- function(file, ...){
   # file = Path and filename plus extension. May be .csv or .xlsx
   # sheet = for Excel files, name or index of sheet to read
   
@@ -23,40 +23,66 @@ read.default <- function(file, sheet = 1){
   ptm <- proc.time()
   
   if(file_ext(file) == 'csv'){
-    # read file with StringsAsFactors == F to get raw vectors
-    print(ptm - proc.time()) # see how long this took
-    return(read.csv(file, check.names = T, stringsAsFactors = F))
-  }else{if(file_ext(file) == 'xlsx'){
-    print(ptm - proc.time()) # see how long this took
-    return(read_excel(file, sheet))
+    df <- read.csv(file, check.names = T, stringsAsFactors = F, ...)
+  }else{if(file_ext(file) %in% c('xls', 'xlsx')){
+    df <- read_excel(file, ...)
   }else{
-    print(ptm - proc.time()) # see how long this took
-    return(NA)
+    df <- NA
   }}
+  print(proc.time() - ptm) # see how long this took
+  return(df)
 }
 
 # read in all files of common type from folder, concatenate by row
-read.all <- function(filetype, dir = '.', recurse = T){
+read.all <- function(filetype, dir = '.', ...){
   # filetype = name of extension to read ('csv', 'xls', or 'xlsx')
   # dir = directory to read files from 
-  # recurse = read from all subdirectories?
   
   # timer
   ptm <- proc.time()
   
   vars <- list() # initiate empty list for later concatenation of dfs
-  for(f in list.files(path = dir, pattern = filetype, full.names = T, recursive = recurse)){
-    df <- read.default(f) # read csv file or first sheet of Excel file into dataframe
-    name <- tail(strsplit(file_path_sans_ext(f), split = '\\/')[[1]], n = 1) # get name of file alone
+  for(f in list.files(path = dir, pattern = filetype, full.names = T, recursive = T)){
+    name <- make.names(tail(strsplit(file_path_sans_ext(f), split = '\\/')[[1]], n = 1)) # get syntactically valid name of file alone
+    print(paste0('Reading ',name))
+    df <- read.default(f, ...) # read csv or Excel file into dataframe
     df$file <- name # create 'file' column that has metadata pointing to file name
     assign(name, df) # rename the df as the file ID
     vars <- append(vars, name) # add name of new df to list of variables
   }
+  # concatenate rows of all dfs
+  combined <- eval(parse(text = paste0('do.call(rbind.fill, args = list(',paste(vars,collapse = ','),'))')))
+  print(proc.time() - ptm) # see how long this took
+  return(combined)
+}
+
+# read .csv file from line that matches string
+read.from <- function(file, start.str, end.str = NA, offset = 0, ...){
+  # file = Path and filename plus extension. May be .csv file.
+  # start.str = Regular Expression contained by line to start reading from
+  # end.str = Regular Expression contained by line to end reading
+  # offset = number of lines from start.str to beginning of data
+  #   e.g., if your file looks like below, you could have start.str = 'Standards,',
+  #     and offset = 1 so your header row contains actual column names.
+  #   Standards,,,,
+  #   Name,Replicate,Well,Cts,Expected nM
+  #   STD01,1,A01,18.384,20
   
-  concatframe <- do.call(rbind.fill, args = eval(parse(text=paste0("list(",paste(unlist(vars),collapse=","),")"))))
-  # see how long this took:
-  print(proc.time() - ptm)
-  return(concatframe)
+  # timer
+  ptm <- proc.time()
+  
+  skip.no <- grep(pattern = start.str, x = readLines(file)) - 1 + offset
+  if(!is.na(end.str)){
+    end.no <- grep(pattern = end.str, x = readLines(file))
+    print(paste0('Reading ', tail(strsplit(file,'/')[[1]],n=1), ' from line ', skip.no, ' to line ', end.no))
+    df <- read.default(file, skip = skip.no, nrows = end.no - skip.no - 2, ...)
+  }else{
+    print(paste0('Reading ', tail(strsplit(file,'/')[[1]],n=1), ' from line ', skip.no))
+    df <- read.default(file, skip = skip.no, ...)
+  }
+  
+  print(proc.time() - ptm) # see how long this took
+  return(df)
 }
 
 # save ggplot as .png image
