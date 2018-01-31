@@ -75,7 +75,7 @@ read.from <- function(file, start.str, end.str = NA, offset = 0, ...){
   if(!is.na(end.str)){
     end.no <- grep(pattern = end.str, x = readLines(file))
     print(paste0('Reading ', tail(strsplit(file,'/')[[1]],n=1), ' from line ', skip.no, ' to line ', end.no))
-    df <- read.default(file, skip = skip.no, nrows = end.no - skip.no - 2, ...)
+    df <- read.default(file, skip = skip.no, nrows = end.no - skip.no + offset, ...)
   }else{
     print(paste0('Reading ', tail(strsplit(file,'/')[[1]],n=1), ' from line ', skip.no))
     df <- read.default(file, skip = skip.no, ...)
