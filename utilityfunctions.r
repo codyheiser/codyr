@@ -109,6 +109,68 @@ vectorsplit <- function(v, delim = '\\_', keep = 1){
   return(sapply(strsplit(as.character(v),delim), `[`, keep))
 }
 
+# test for normality of a dataset
+norm.test <- function(v, qq = TRUE){
+  # uses Shaprio-Wilk test to determine if a vector of data is normally distributed
+  # log2 and log10-transforms data to see if those are normally distributed as well
+  # v = vector of numerical data to test for normal distribution
+  # qq = output a quantile-quantile plot against the normal distribution?
+  
+  results <- data.frame(transformation = c('Original','Log2-Transformed','Log10-Transformed'),shapiro.results = c('Undet.','Undet.','Undet.'),
+                        shapiro.pval = c(shapiro.test(v)$p.value, shapiro.test(log2(v))$p.value, shapiro.test(log10(v))$p.value))
+  # determine if these distributions and transformed distributions are normal
+  results$shapiro.results <- unlist(lapply(results$shapiro.pval, FUN = function(x){
+    if(x < 0.05){return('Not Normal')} 
+    if(x >= 0.05){return('Normal')}
+    }))
+  # output q-q plot if necessary
+  if(isTRUE(qq)){
+    qqnorm(v)
+    qqline(v)
+  }
+  # print results to console
+  for(x in 1:nrow(results)){
+    print(paste0(results$transformation[x],' distribution is ',results$shapiro.results[x],', with a p-value of ', signif(results$shapiro.pval[x], 5)))
+  }
+  
+}
+
+# test for and remove outliers in a dataset
+outlier.test <- function(v){
+  # uses Grubbs test to iteratively identify outliers in a vector of data
+  # v = vector of numerical data to test for outliers
+  
+  ref <- 1 # initialize reference for checking vector length. start at 1 to get into loop
+  
+  while(length(v) != ref){
+    # do the test
+    grubb <- grubbs.test(v)
+    
+    if(grubb$p.value >= 0.05){
+      # if there are no outliers, print message to console and return vector as-is
+      
+      ref <- length(v) # reference becomes full vector length
+      print('There are no outliers in the dataset')
+      
+    }else{
+      # if an outlier is detected, identify it, remove from vector, and loop
+      
+      ref <- length(v) # reference becomes full vector length before you remove an outlier
+      print(grubb$alternative) # prints outlier value to console
+      v <- v[v != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3])] # remove outlier from vector
+      
+      # check to make sure you didn't mess the vector up
+      if(length(v) < ref - 1){
+        print('Warning: Removed more than one element with the same outlier value')
+      }
+    }
+  }
+  
+  return(v) # return the vector
+  
+}
+
+
 # color scale
 asgn_colors <- list("primblue"="#4298cc",
                     "primorange"="#ee7624",
