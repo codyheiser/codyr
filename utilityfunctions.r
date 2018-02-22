@@ -109,6 +109,28 @@ vectorsplit <- function(v, delim = '\\_', keep = 1){
   return(sapply(strsplit(as.character(v),delim), `[`, keep))
 }
 
+# enumerate replicate values in a dataframe column
+enumerate <- function(df, col){
+  # df = dataframe to operate on (passed as a string)
+  # col = column containing values to enumerate (passed as a string) 
+  
+  x = eval(parse(text = df)) # convert string into evaluable expression for df
+  v = as.character(eval(parse(text = paste0(df,'$',col)))) # convert strings into evaluable expression for df$col
+  
+  if(length(unique(v)) == length(v)){
+    print(paste0('All values in ', df, '$', col, ' are unique!'))
+  }
+  if(length(unique(v)) == 1){
+    print(paste0('All values in ', df, '$', col, ' are the same!'))
+  }
+  
+  reps <- list() # initialize empty list of replicate values
+  for(row in 1:length(v)){
+    reps <- append(reps, (x %>% dplyr::ungroup() %>% dplyr::slice(1:row) %>% dplyr::count(eval(parse(text = col))) %>% dplyr::rename(var = `eval(parse(text = col))`) %>% filter(var == v[row]))$n)
+  }
+  return(unlist(reps))
+}
+
 # test for normality of a dataset
 norm.test <- function(v, qq = TRUE){
   # uses Shaprio-Wilk test to determine if a vector of data is normally distributed
