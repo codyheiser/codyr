@@ -13,6 +13,7 @@ require('readxl')
 require('ggplot2')
 require('gplots')
 require('plotly')
+require('outliers')
 
 # read in .csv or .xlsx file
 read.default <- function(file, ...){
@@ -160,9 +161,12 @@ norm.test <- function(v, qq = TRUE){
 # test for and remove outliers in a dataset
 outlier.test <- function(v){
   # uses Grubbs test to iteratively identify outliers in a vector of data
+  # returns a mask (logical vector) of values to keep
   # v = vector of numerical data to test for outliers
   
   ref <- 1 # initialize reference for checking vector length. start at 1 to get into loop
+  norm <- 1 # initialize normalizer for output vector
+  norm.mask <- rep(T, length(v)) # initialize logical vector of TRUEs for output
   
   while(length(v) != ref){
     # do the test
@@ -178,17 +182,24 @@ outlier.test <- function(v){
       # if an outlier is detected, identify it, remove from vector, and loop
       
       ref <- length(v) # reference becomes full vector length before you remove an outlier
-      print(grubb$alternative) # prints outlier value to console
-      v <- v[v != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3])] # remove outlier from vector
+      v.mask <- v != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]) # determine position where outlier is in vector
+      norm.mask <- norm.mask + v.mask 
+      print(paste0(grubb$alternative, ' at position ', which(v.mask == FALSE), ' in the vector')) # prints outlier value to console
       
+      v <- v[v.mask] # remove outlier from vector
       # check to make sure you didn't mess the vector up
       if(length(v) < ref - 1){
         print('Warning: Removed more than one element with the same outlier value')
       }
+      
+      norm <- norm + 1 # iterate normalizer for output vector
     }
   }
   
-  return(v) # return the vector
+  norm.mask <- norm.mask/norm # normalize aggregate logical vector to number of samples removed. TRUE + TRUE = 2 / 2 (for 1 loop) = 1 = TRUE 
+  norm.mask[norm.mask != 1] <- 0
+  norm.mask <- as.logical(norm.mask)
+  return(norm.mask) # return the logical vector
   
 }
 
