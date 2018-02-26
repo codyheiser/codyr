@@ -95,6 +95,25 @@ to.png <- function(plt, destination = 'plt.png', w = 8, h = 8, r = 700){
   ggsave(filename = destination, plot = plt, width = w, height = h, units = 'in', dpi = r)
 }
 
+# convert POSIXct date-time object to total time in minutes, ignoring date
+to.minutes <- function(x){
+  # takes a POSIXct or POSIXt object and converts it to time in minutes
+  hr.min.sec <- as.numeric(strsplit(strsplit(as.character(x), '\\ ')[[1]][2], ':')[[1]])
+  minutes <- hr.min.sec[1]*60 + hr.min.sec[2] + hr.min.sec[3]/60
+  return(minutes)
+}
+
+# convert time in minutes to hr:min:sec as string
+from.minutes <- function(x){
+  # takes a numeric value of minutes (float) and converts to hr:min:sec
+  frac <- x %% 1
+  sec <- round(frac * 60, 0)
+  min <- (x - frac) %% 60
+  hr <- (x - min - frac) / 60
+  hr.min.sec <- paste0(hr,':',min,':',sec)
+  return(hr.min.sec)
+}
+
 # exact string match from single, delimited string
 checkstring <- function(checkstr,fullstr,delimiter = '\\|'){
   # function to check for exact string matches within a string delimited by a character of choice
