@@ -159,9 +159,13 @@ norm.test <- function(v, qq = TRUE){
   # qq = output a quantile-quantile plot against the normal distribution?
   
   results <- data.frame(transformation = c('Original','Log2-Transformed','Log10-Transformed'),shapiro.results = c('Undet.','Undet.','Undet.'),
-                        shapiro.pval = c(shapiro.test(v)$p.value, shapiro.test(log2(v))$p.value, shapiro.test(log10(v))$p.value))
+                        shapiro.pval = c(shapiro.test(v)$p.value, 
+                                         try_default(shapiro.test(log2(v))$p.value,default = NA,quiet = T), 
+                                         try_default(shapiro.test(log10(v))$p.value,default = NA,quiet = T))
+                        )
   # determine if these distributions and transformed distributions are normal
   results$shapiro.results <- unlist(lapply(results$shapiro.pval, FUN = function(x){
+    if(is.na(x)){return('Not Real')}
     if(x < 0.05){return('Not Normal')} 
     if(x >= 0.05){return('Normal')}
     }))
@@ -183,6 +187,7 @@ outlier.test <- function(v){
   # returns a mask (logical vector) of values to keep
   # v = vector of numerical data to test for outliers
   
+  vhold <- v # hold on to a copy of full v for masking on
   ref <- 1 # initialize reference for checking vector length. start at 1 to get into loop
   norm <- 1 # initialize normalizer for output vector
   norm.mask <- rep(T, length(v)) # initialize logical vector of TRUEs for output
@@ -201,9 +206,10 @@ outlier.test <- function(v){
       # if an outlier is detected, identify it, remove from vector, and loop
       
       ref <- length(v) # reference becomes full vector length before you remove an outlier
-      v.mask <- v != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]) # determine position where outlier is in vector
-      norm.mask <- norm.mask + v.mask 
-      print(paste0(grubb$alternative, ' at position ', which(v.mask == FALSE), ' in the vector')) # prints outlier value to console
+      v.mask <- v != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]) # determine position where outlier is in current vector
+      vhold.mask <- vhold != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]) # determine position where outlier is in original vector
+      norm.mask <- norm.mask + vhold.mask 
+      print(paste0(grubb$alternative, ' at position ', which(vhold.mask == FALSE), ' in the vector')) # prints outlier value to console
       
       v <- v[v.mask] # remove outlier from vector
       # check to make sure you didn't mess the vector up
@@ -222,6 +228,39 @@ outlier.test <- function(v){
   
 }
 
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL){
+  # Multiple plot function
+  # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+  # - cols:   Number of columns in layout
+  # - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+  # If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+  # then plot 1 will go in the upper left, 2 will go in the upper right, and
+  # 3 will go all the way across the bottom.
+  library(grid)
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  numPlots = length(plots)
+  # If layout is NULL, then use 'cols' to determine layout
+  if(is.null(layout)){
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  if(numPlots==1){
+    print(plots[[1]])
+  }else{
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    # Make each plot, in the correct location
+    for(i in 1:numPlots){
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }}}
 
 # color scale
 asgn_colors <- list("primblue"="#4298cc",
