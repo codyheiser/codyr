@@ -14,6 +14,7 @@ require('ggplot2')
 require('gplots')
 require('plotly')
 require('outliers')
+require('here')
 
 # read in .csv or .xlsx file
 read.default <- function(file, ...){
