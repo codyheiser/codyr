@@ -45,12 +45,16 @@ read.all <- function(filetype, dir = '.', ...){
   
   vars <- list() # initiate empty list for later concatenation of dfs
   for(f in list.files(path = dir, pattern = filetype, full.names = T, recursive = T)){
-    name <- make.names(tail(strsplit(file_path_sans_ext(f), split = '\\/')[[1]], n = 1)) # get syntactically valid name of file alone
-    print(paste0('Reading ',name))
-    df <- read.default(f, ...) # read csv or Excel file into dataframe
-    df$file <- name # create 'file' column that has metadata pointing to file name
-    assign(name, df) # rename the df as the file ID
-    vars <- append(vars, name) # add name of new df to list of variables
+    if(str_detect(f, regex('\\/\\~\\$')) && str_detect(f, filetype)){
+      # ignore files that are open by Windows
+    }else{
+      name <- make.names(tail(strsplit(file_path_sans_ext(f), split = '\\/')[[1]], n = 1)) # get syntactically valid name of file alone
+      print(paste0('Reading ',name))
+      df <- read.default(f, ...) # read csv or Excel file into dataframe
+      df$file <- name # create 'file' column that has metadata pointing to file name
+      assign(name, df) # rename the df as the file ID
+      vars <- append(vars, name) # add name of new df to list of variables
+    }
   }
   # concatenate rows of all dfs
   combined <- eval(parse(text = paste0('do.call(rbind.fill, args = list(',paste(vars,collapse = ','),'))')))
