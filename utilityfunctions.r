@@ -7,6 +7,7 @@ require('reshape2')
 require('plyr')
 require('dplyr')
 require('stringr')
+require('magrittr')
 require('jsonlite')
 require('tools')
 require('readxl')
@@ -48,7 +49,7 @@ read.all <- function(filetype, dir = '.', ...){
     if(str_detect(f, regex('\\/\\~\\$')) && str_detect(f, filetype)){
       # ignore files that are open by Windows
     }else{
-      name <- make.names(tail(strsplit(file_path_sans_ext(f), split = '\\/')[[1]], n = 1)) # get syntactically valid name of file alone
+      name <- make.names(f) # get syntactically valid name of file
       print(paste0('Reading ',name))
       df <- read.default(f, ...) # read csv or Excel file into dataframe
       df$file <- name # create 'file' column that has metadata pointing to file name
@@ -154,6 +155,20 @@ enumerate <- function(df, col){
     reps <- append(reps, (x %>% dplyr::ungroup() %>% dplyr::slice(1:row) %>% dplyr::count(eval(parse(text = col))) %>% dplyr::rename(var = `eval(parse(text = col))`) %>% filter(var == v[row]))$n)
   }
   return(unlist(reps))
+}
+
+# normalize each value in df to the median for its row. return molten dataframe.
+row.norm <- function(matrix, id.vars=c('Sample')){
+  # matrix = dataframe to normalize values in
+  # id.vars = vector of column names to ignore when normalizing
+  
+  # calculate the median for each row for all columns
+  matrix$row.median <- apply(matrix[-which(names(matrix) %in% id.vars)], # ignore any ID variables and normalize over desired values only
+                             FUN = function(x){median(as.numeric(x), na.rm = T)},
+                             MARGIN = 1)
+  melt <- melt(matrix, id.vars = c(id.vars, 'row.median')) # get values into one column
+  melt$norm <- unlist(log2(melt$value/melt$row.median)) # calculate normalized value for each column based on row median
+  return(melt)
 }
 
 # test for normality of a dataset
