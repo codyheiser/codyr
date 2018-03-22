@@ -177,7 +177,7 @@ global.norm <- function(matrix, id.vars=c('Sample')){
   # id.vars = vector of column names to ignore when normalizing
   
   melt <- melt(matrix, id.vars = id.vars) # get values into one column
-  global.median <- median(melt$value) # calculate the median for all rows and all columns
+  global.median <- median(melt$value, na.rm = T) # calculate the median for all rows and all columns
   melt$norm <- unlist(log2(melt$value/global.median)) # calculate normalized value for each column based on global median
   return(melt)
 }
