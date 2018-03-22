@@ -171,6 +171,17 @@ row.norm <- function(matrix, id.vars=c('Sample')){
   return(melt)
 }
 
+# normalize each value in df to the global median. return molten dataframe.
+global.norm <- function(matrix, id.vars=c('Sample')){
+  # matrix = dataframe to normalize values in
+  # id.vars = vector of column names to ignore when normalizing
+  
+  melt <- melt(matrix, id.vars = id.vars) # get values into one column
+  global.median <- median(melt$value) # calculate the median for all rows and all columns
+  melt$norm <- unlist(log2(melt$value/global.median)) # calculate normalized value for each column based on global median
+  return(melt)
+}
+
 # test for normality of a dataset
 norm.test <- function(v, qq = TRUE){
   # uses Shaprio-Wilk test to determine if a vector of data is normally distributed
@@ -206,6 +217,7 @@ outlier.test <- function(v){
   # uses Grubbs test to iteratively identify outliers in a vector of data
   # returns a mask (logical vector) of values to keep
   # v = vector of numerical data to test for outliers
+  options(digits = 20) # prevent rounding during as.numeric
   
   vhold <- v # hold on to a copy of full v for masking on
   ref <- 1 # initialize reference for checking vector length. start at 1 to get into loop
@@ -226,8 +238,8 @@ outlier.test <- function(v){
       # if an outlier is detected, identify it, remove from vector, and loop
       
       ref <- length(v) # reference becomes full vector length before you remove an outlier
-      v.mask <- v != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]) # determine position where outlier is in current vector
-      vhold.mask <- vhold != as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]) # determine position where outlier is in original vector
+      v.mask <- round(v,10) != round(as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]),10) # determine position where outlier is in current vector
+      vhold.mask <- round(vhold,10) != round(as.numeric(strsplit(grubb$alternative, '\\ ')[[1]][3]),10) # determine position where outlier is in original vector
       norm.mask <- norm.mask + vhold.mask 
       print(paste0(grubb$alternative, ' at position ', which(vhold.mask == FALSE), ' in the vector')) # prints outlier value to console
       
