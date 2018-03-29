@@ -120,6 +120,18 @@ from.minutes <- function(x){
   return(hr.min.sec)
 }
 
+# do some quick mafs
+quickmafs <- function(a, b, c){
+	# a, b, c = three numeric values to do quick mafs on
+	if(class(a) != 'numeric' | class(b) != 'numeric' | class(c) != 'numeric'){
+		print("SKRAA BOP POP!")
+	}else{
+		maf1 <- a + b
+		maf2 <- maf1 - c
+		print(paste0(a," plus ",b," is ",maf1,". Minus ",c," is ",maf2,", QUICKMAFS!"))
+	}
+}
+
 # exact string match from single, delimited string
 checkstring <- function(checkstr,fullstr,delimiter = '\\|'){
   # function to check for exact string matches within a string delimited by a character of choice
@@ -158,27 +170,29 @@ enumerate <- function(df, col){
 }
 
 # normalize each value in df to the median for its row. return molten dataframe.
-row.norm <- function(matrix, id.vars=c('Sample')){
+row.norm <- function(matrix, id.vars=c('Sample'), strategy = ''){
   # matrix = dataframe to normalize values in
   # id.vars = vector of column names to ignore when normalizing
+  # strategy = transformation to perform on normalized fraction. 'log2', 'log', 'log10', etc. Default is none.
   
   # calculate the median for each row for all columns
   matrix$row.median <- apply(matrix[-which(names(matrix) %in% id.vars)], # ignore any ID variables and normalize over desired values only
                              FUN = function(x){median(as.numeric(x), na.rm = T)},
                              MARGIN = 1)
   melt <- melt(matrix, id.vars = c(id.vars, 'row.median')) # get values into one column
-  melt$norm <- unlist(log2(melt$value/melt$row.median)) # calculate normalized value for each column based on row median
+  melt$norm <- eval(parse(text = paste0('unlist(',strategy,'(melt$value/row.median))'))) # calculate normalized value for each column based on row median
   return(melt)
 }
 
 # normalize each value in df to the global median. return molten dataframe.
-global.norm <- function(matrix, id.vars=c('Sample')){
+global.norm <- function(matrix, id.vars=c('Sample'), strategy = ''){
   # matrix = dataframe to normalize values in
   # id.vars = vector of column names to ignore when normalizing
+  # strategy = transformation to perform on normalized fraction. 'log2', 'log', 'log10', etc. Default is none.
   
   melt <- melt(matrix, id.vars = id.vars) # get values into one column
   global.median <- median(melt$value, na.rm = T) # calculate the median for all rows and all columns
-  melt$norm <- unlist(log2(melt$value/global.median)) # calculate normalized value for each column based on global median
+  melt$norm <- eval(parse(text = paste0('unlist(',strategy,'(melt$value/global.median))'))) # calculate normalized value for each column based on global median
   return(melt)
 }
 
