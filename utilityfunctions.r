@@ -179,8 +179,8 @@ row.norm <- function(matrix, id.vars=c('Sample'), strtegy = ''){
   matrix$row.median <- apply(matrix[-which(names(matrix) %in% id.vars)], # ignore any ID variables and normalize over desired values only
                              FUN = function(x){median(as.numeric(x), na.rm = T)},
                              MARGIN = 1)
-  melt <- melt(matrix, id.vars = c(id.vars, 'row.median')) # get values into one column
-  melt$norm <- eval(parse(text = paste0('unlist(',strtegy,'(melt$value/row.median))'))) # calculate normalized value for each column based on row median
+  melt <- melt(matrix, id.vars = c(unlist(id.vars), 'row.median')) # get values into one column
+  melt$norm <- eval(parse(text = paste0('unlist(',strtegy,'(melt$value/melt$row.median))'))) # calculate normalized value for each column based on row median
   return(melt)
 }
 
