@@ -170,29 +170,29 @@ enumerate <- function(df, col){
 }
 
 # normalize each value in df to the median for its row. return molten dataframe.
-row.norm <- function(matrix, id.vars=c('Sample'), strategy = ''){
+row.norm <- function(matrix, id.vars=c('Sample'), strtegy = ''){
   # matrix = dataframe to normalize values in
   # id.vars = vector of column names to ignore when normalizing
-  # strategy = transformation to perform on normalized fraction. 'log2', 'log', 'log10', etc. Default is none.
+  # strtegy = transformation to perform on normalized fraction. 'log2', 'log', 'log10', etc. Default is none.
   
   # calculate the median for each row for all columns
   matrix$row.median <- apply(matrix[-which(names(matrix) %in% id.vars)], # ignore any ID variables and normalize over desired values only
                              FUN = function(x){median(as.numeric(x), na.rm = T)},
                              MARGIN = 1)
   melt <- melt(matrix, id.vars = c(id.vars, 'row.median')) # get values into one column
-  melt$norm <- eval(parse(text = paste0('unlist(',strategy,'(melt$value/row.median))'))) # calculate normalized value for each column based on row median
+  melt$norm <- eval(parse(text = paste0('unlist(',strtegy,'(melt$value/row.median))'))) # calculate normalized value for each column based on row median
   return(melt)
 }
 
 # normalize each value in df to the global median. return molten dataframe.
-global.norm <- function(matrix, id.vars=c('Sample'), strategy = ''){
+global.norm <- function(matrix, id.vars=c('Sample'), strtegy = ''){
   # matrix = dataframe to normalize values in
   # id.vars = vector of column names to ignore when normalizing
-  # strategy = transformation to perform on normalized fraction. 'log2', 'log', 'log10', etc. Default is none.
+  # strtegy = transformation to perform on normalized fraction. 'log2', 'log', 'log10', etc. Default is none.
   
   melt <- melt(matrix, id.vars = id.vars) # get values into one column
   global.median <- median(melt$value, na.rm = T) # calculate the median for all rows and all columns
-  melt$norm <- eval(parse(text = paste0('unlist(',strategy,'(melt$value/global.median))'))) # calculate normalized value for each column based on global median
+  melt$norm <- eval(parse(text = paste0('unlist(',strtegy,'(melt$value/global.median))'))) # calculate normalized value for each column based on global median
   return(melt)
 }
 
