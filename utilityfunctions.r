@@ -223,7 +223,7 @@ norm.test <- function(v, qq = TRUE){
   for(x in 1:nrow(results)){
     print(paste0(results$transformation[x],' distribution is ',results$shapiro.results[x],', with a p-value of ', signif(results$shapiro.pval[x], 5)))
   }
-  
+  return(results)
 }
 
 # test for and remove outliers in a dataset
