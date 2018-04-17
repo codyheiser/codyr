@@ -161,3 +161,18 @@ enumerate <- function(df, col){
   }
   return(unlist(reps))
 }
+
+# split a column of strings from a data.frame to two columns by a delimiter
+columnsplit <- function(df, clmn, newnames = c('name1', 'name2'), drop.orig = F, ...){
+  # df = data.frame to operate on
+  # clmn = name of column in df to split
+  # newnames = vector containing new column names, in order
+  # drop.orig = remove original clmn from data.frame?
+  # ... = options to pass to vectorsplit function; specifically "delimiter = '\\_'"
+  eval(parse(text = paste0('df$',newnames[1],'<-vectorsplit(df$',clmn,',...,keep=1)'))) # put string from before delim into column with name1
+  eval(parse(text = paste0('df$',newnames[2],'<-vectorsplit(df$',clmn,',...,keep=2)'))) # put string from after delim into column with name2
+  if(drop.orig){
+    eval(parse(text = paste0('df<-subset(df, select = -',clmn,')'))) # drop original column from df if drop.orig flag set to TRUE
+  }
+  return(df)
+}
