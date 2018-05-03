@@ -45,11 +45,12 @@ global.norm <- function(matrix, id.vars=c('Sample'), norm.to = 'median', trans =
 }
 
 # test for normality of a dataset
-norm.test <- function(v, qq = TRUE){
+norm.test <- function(v, qq = TRUE, suppress.out = FALSE){
   # uses Shaprio-Wilk test to determine if a vector of data is normally distributed
   # log2 and log10-transforms data to see if those are normally distributed as well
   # v = vector of numerical data to test for normal distribution
   # qq = output a quantile-quantile plot against the normal distribution?
+  # suppress.out = print results of each test to console?
   
   results <- data.frame(transformation = c('Original','Log2-Transformed','Log10-Transformed'),shapiro.results = c('Undet.','Undet.','Undet.'),
                         shapiro.pval = c(shapiro.test(v)$p.value, 
@@ -67,9 +68,11 @@ norm.test <- function(v, qq = TRUE){
     qqnorm(v)
     qqline(v)
   }
-  # print results to console
-  for(x in 1:nrow(results)){
-    print(paste0(results$transformation[x],' distribution is ',results$shapiro.results[x],', with a p-value of ', signif(results$shapiro.pval[x], 5)))
+  # print results to console if necessary
+  if(isTRUE(suppress.out)){
+    for(x in 1:nrow(results)){
+      print(paste0(results$transformation[x],' distribution is ',results$shapiro.results[x],', with a p-value of ', signif(results$shapiro.pval[x], 5)))
+    }
   }
   return(results)
 }
