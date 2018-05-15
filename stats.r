@@ -69,7 +69,7 @@ norm.test <- function(v, qq = TRUE, suppress.out = FALSE){
     qqline(v)
   }
   # print results to console if necessary
-  if(isTRUE(suppress.out)){
+  if(!isTRUE(suppress.out)){
     for(x in 1:nrow(results)){
       print(paste0(results$transformation[x],' distribution is ',results$shapiro.results[x],', with a p-value of ', signif(results$shapiro.pval[x], 5)))
     }
