@@ -176,3 +176,14 @@ columnsplit <- function(df, clmn, newnames = c('name1', 'name2'), drop.orig = F,
   }
   return(df)
 }
+
+# conditionally mutate rows of dataframe as part of dplyr::mutate function
+mutate_cond <- function(.data, condition, ..., envir = parent.frame()){
+  # This function performs a __mutate__ operation on a subset of rows of a dataframe without the need for __filter__ or __group_by__
+  # and returns the output in place. Because of this, you cannot create new columns within this function as you can using normal
+  # __dplyr::mutate__. Instead, ensure output columns are already initialized in the dataframe.
+  condition <- eval(substitute(condition), .data, envir)
+  .data[condition,] %>%
+    mutate(...) -> .data[condition,]
+  return(.data)
+}
