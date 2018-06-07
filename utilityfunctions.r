@@ -17,7 +17,7 @@ require('readxl')
 source('stats.r')
 source('ggplot_config.r')
 # working directory tracking using 'here'
-# require('here')
+require('here')
 
 # read in .csv or .xlsx file
 read.default <- function(file, ...){
@@ -29,11 +29,13 @@ read.default <- function(file, ...){
   
   if(file_ext(file) == 'csv'){
     df <- read.csv(file, check.names = T, stringsAsFactors = F, ...)
+  }else{if(file_ext(file) == 'txt'){
+    df <- read.table(file, header = T, sep = '\t', ...)
   }else{if(file_ext(file) %in% c('xls', 'xlsx')){
     df <- read_excel(file, ...)
   }else{
     df <- NA
-  }}
+  }}}
   print(proc.time() - ptm) # see how long this took
   return(df)
 }
@@ -47,13 +49,13 @@ read.all <- function(filetype, dir = '.', ...){
   ptm <- proc.time()
   
   vars <- list() # initiate empty list for later concatenation of dfs
-  for(f in list.files(path = dir, pattern = filetype, full.names = T, recursive = T)){
-    if(str_detect(f, regex('\\/\\~\\$')) && str_detect(f, filetype)){
+  for(f in list.files(path = dir, pattern = glob2rx(filetype), recursive = T)){
+    if(str_detect(f, regex('\\/\\~\\$'))){
       # ignore files that are open by Windows
     }else{
       name <- make.names(f) # get syntactically valid name of file
       print(paste0('Reading ',name))
-      df <- read.default(f, ...) # read csv or Excel file into dataframe
+      df <- read.default(file_path_as_absolute(f), ...) # read csv or Excel file into dataframe
       df$file <- name # create 'file' column that has metadata pointing to file name
       assign(name, df) # rename the df as the file ID
       vars <- append(vars, name) # add name of new df to list of variables
