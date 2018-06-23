@@ -1,5 +1,5 @@
 #========================= CODY FUNCTIONS =========================#
-# The following functions are for general use in loading, reshaping, 
+# The following functions are for general use in loading, reshaping,
 #   manipulating, and exporting datasets.
 
 # Set up your workspace:
@@ -23,10 +23,10 @@ require('here')
 read.default <- function(file, ...){
   # file = Path and filename plus extension. May be .csv or .xlsx
   # sheet = for Excel files, name or index of sheet to read
-  
+
   # timer
   ptm <- proc.time()
-  
+
   if(file_ext(file) == 'csv'){
     df <- read.csv(file, check.names = T, stringsAsFactors = F, ...)
   }else{if(file_ext(file) == 'txt'){
@@ -42,12 +42,12 @@ read.default <- function(file, ...){
 
 # read in all files of common type from folder, concatenate by row
 read.all <- function(filetype, dir = '.', ...){
-  # filetype = name of extension to read ('csv', 'xls', or 'xlsx')
-  # dir = directory to read files from 
-  
+  # filetype = name of extension to read ('csv', 'xls', or 'xlsx'). you can also use globs (e.g. 'myfile*.csv')
+  # dir = directory to read files from
+
   # timer
   ptm <- proc.time()
-  
+
   vars <- list() # initiate empty list for later concatenation of dfs
   for(f in list.files(path = dir, pattern = glob2rx(filetype), recursive = T)){
     if(str_detect(f, regex('\\/\\~\\$'))){
@@ -78,10 +78,10 @@ read.from <- function(file, start.str, end.str = NA, offset = 0, ...){
   #   Standards,,,,
   #   Name,Replicate,Well,Cts,Expected nM
   #   STD01,1,A01,18.384,20
-  
+
   # timer
   ptm <- proc.time()
-  
+
   skip.no <- grep(pattern = start.str, x = readLines(file)) - 1 + offset
   if(!is.na(end.str)){
     end.no <- grep(pattern = end.str, x = readLines(file))
@@ -91,7 +91,7 @@ read.from <- function(file, start.str, end.str = NA, offset = 0, ...){
     print(paste0('Reading ', tail(strsplit(file,'/')[[1]],n=1), ' from line ', skip.no))
     df <- read.default(file, skip = skip.no, ...)
   }
-  
+
   print(proc.time() - ptm) # see how long this took
   return(df)
 }
@@ -145,18 +145,18 @@ vectorsplit <- function(v, delim = '\\_', keep = 1){
 # enumerate replicate values in a dataframe column
 enumerate <- function(df, col){
   # df = dataframe to operate on (passed as a string)
-  # col = column containing values to enumerate (passed as a string) 
-  
+  # col = column containing values to enumerate (passed as a string)
+
   x = eval(parse(text = df)) # convert string into evaluable expression for df
   v = as.character(eval(parse(text = paste0(df,'$',col)))) # convert strings into evaluable expression for df$col
-  
+
   if(length(unique(v)) == length(v)){
     print(paste0('All values in ', df, '$', col, ' are unique!'))
   }
   if(length(unique(v)) == 1){
     print(paste0('All values in ', df, '$', col, ' are the same!'))
   }
-  
+
   reps <- list() # initialize empty list of replicate values
   for(row in 1:length(v)){
     reps <- append(reps, (x %>% dplyr::ungroup() %>% dplyr::slice(1:row) %>% dplyr::count(eval(parse(text = col))) %>% dplyr::rename(var = `eval(parse(text = col))`) %>% filter(var == v[row]))$n)
