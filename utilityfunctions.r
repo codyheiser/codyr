@@ -41,21 +41,27 @@ read.default <- function(file, ...){
 }
 
 # read in all files of common type from folder, concatenate by row
-read.all <- function(filetype, dir = '.', ...){
+read.all <- function(filetype, dir = '.', exclude = NA, ...){
   # filetype = name of extension to read ('csv', 'xls', or 'xlsx')
   # dir = directory to read files from 
+  # exclude = subdirectory tree to exclude from search
   
   # timer
   ptm <- proc.time()
   
   vars <- list() # initiate empty list for later concatenation of dfs
-  for(f in list.files(path = dir, pattern = glob2rx(filetype), recursive = T)){
+  for(f in list.files(path = dir, pattern = glob2rx(filetype), recursive = T, full.names = T)){
     if(str_detect(f, regex('\\/\\~\\$'))){
       # ignore files that are open by Windows
+      next
+    }
+    if(!is.na(exclude) && exclude %in% str_split(f, pattern = '\\/')[[1]]){
+      # ignore files in exclude directory and all subdirectories
+      next
     }else{
       name <- make.names(f) # get syntactically valid name of file
       print(paste0('Reading ',name))
-      df <- read.default(file_path_as_absolute(f), ...) # read csv or Excel file into dataframe
+      df <- read.default(f, ...) # read csv or Excel file into dataframe
       df$file <- name # create 'file' column that has metadata pointing to file name
       assign(name, df) # rename the df as the file ID
       vars <- append(vars, name) # add name of new df to list of variables
