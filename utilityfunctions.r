@@ -55,7 +55,7 @@ read.all <- function(filetype, dir = '.', ...){
     }else{
       name <- make.names(f) # get syntactically valid name of file
       print(paste0('Reading ',name))
-      df <- read.default(file_path_as_absolute(f), ...) # read csv or Excel file into dataframe
+      df <- read.default(file_path_as_absolute(paste0(dir,f)), ...) # read csv or Excel file into dataframe
       df$file <- name # create 'file' column that has metadata pointing to file name
       assign(name, df) # rename the df as the file ID
       vars <- append(vars, name) # add name of new df to list of variables
