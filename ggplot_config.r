@@ -1,10 +1,11 @@
 #========================= GGPLOT2 CONFIG =========================#
-# The following functions are for preferences and common settings  
-#   for use with ggplot2 visualization package
+# The following functions are for preferences and common settings
+#   for use with ggplot2 visualization package in R
 
 # set up your workspace
 require('gplots')
 require('plotly')
+
 
 # save ggplot as .png image
 to.png <- function(plt, destination = 'plt.png', w = 8, h = 8, r = 700){
@@ -14,6 +15,7 @@ to.png <- function(plt, destination = 'plt.png', w = 8, h = 8, r = 700){
   # r = resolution
   ggsave(filename = destination, plot = plt, width = w, height = h, units = 'in', dpi = r)
 }
+
 
 # plot multiple complete plot objects on one image
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL){
@@ -48,30 +50,42 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL){
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
-    }}}
+    }
+  }
+}
+
 
 # color scale
-asgn_colors <- list("primblue"="#4298cc",
-                    "primorange"="#ee7624",
-                    "primgray"="#435563",
-                    "green"="#32d339",
-                    "yellow"="#cedc00",
-                    "red"="#e1261c",
-                    "purple"="#74538F",
-                    "teal"="#20cbd4",
-                    "blue"="#3f97b5",
-                    "lightgray"="#c8c9c7",
-                    "darkgray"="#54585a")
+my_colors <- list("green"="#32d339",
+                  "yellow"="#cedc00",
+                  "red"="#e1261c",
+                  "purple"="#74538F",
+                  "teal"="#20cbd4",
+                  "blue"="#3f97b5",
+                  "lightgray"="#c8c9c7",
+                  "darkgray"="#54585a")
+
 
 # preferred plotting options
 # call these by adding them (+) to a ggplot object
 plot.opts <- list(
   theme_bw(),
-  theme(text = element_text(colour = asgn_colors$darkgray),
-        legend.text=element_text(size=9),
-        axis.line = element_line(colour = asgn_colors$darkgray),
-        axis.title=element_text(size=12),
-        axis.text.x=element_text(size=10),
-        axis.text.y=element_text(size=10),
-        plot.title=element_text(size=18))
+  theme(text = element_text(colour = my_colors$darkgray),
+        legend.text = element_text(size=9),
+        axis.line = element_line(colour = my_colors$darkgray),
+        axis.title = element_text(size=12),
+        axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10),
+        plot.title = element_text(size=18))
+)
+
+# options for dimension reduction plots (t-SNE, UMAP, PCA)
+DR.opts <- list(
+  theme_bw(),
+  theme(panel.grid = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_text(size=12),
+        panel.border = element_blank(),
+        axis.line = element_line(arrow = arrow(type = 'closed', length = unit(0.3, 'cm'), angle = 15)))
 )
